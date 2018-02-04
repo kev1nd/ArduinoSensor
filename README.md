@@ -10,6 +10,7 @@ How it works
 Electronic 
 
 Pictures
-[[https://github.com/kev1nd/ArduinoSensor/blob/master/assets/pic1.png]]
 
 ![Picture of prototype board](https://github.com/kev1nd/ArduinoSensor/blob/master/assets/pic1.png)
+
+![Picture of prototype board](https://github.com/kev1nd/ArduinoSensor/blob/master/assets/pic2.png)
