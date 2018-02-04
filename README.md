@@ -8,3 +8,9 @@ The idea behind the project is learning and training, but it may become the basi
 How it works
 
 Electronic 
+
+Pictures
+
+![Picture of prototype board](https://github.com/kev1nd/ArduinoSensor/blob/master/assets/pic1.png)
+
+![Picture of prototype board](https://github.com/kev1nd/ArduinoSensor/blob/master/assets/pic2.png)
