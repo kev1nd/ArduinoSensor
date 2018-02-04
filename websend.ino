@@ -4,16 +4,17 @@
 //
 // Author: Kevin Dunwell
 //
-// Version 1.0.3
+// Version 1.0.4
 //
 //
 //  02/03/18  1.0.2   Changed SSID to VioletInternet for new hub
 //  02/03/18  1.0.3   Add support for DHT11. Add support for Photo-resistor
+//  02/03/18  1.0.4   Add WiFiEsp library and EEPROM storage for ssid/password
 
-#define _ESPLOGLEVEL_ 4
 #include <WiFiEsp.h>
-
 #include <SimpleDHT.h>
+#include <EEPROM.h>
+
 // for DHT11,
 //      VCC: 5V or 3V
 //      GND: GND
@@ -28,9 +29,11 @@ SimpleDHT11 dht11;
 SoftwareSerial Serial1(6, 7); // RX, TX
 #endif
 
+
 unsigned long waitTime = 30000; // Time to wait for a response
-char ssid[] = "VioletInternet"; // Wifi SSID
-char pass[] = "kjjj1997";       // Wifi Password
+char ssid[15] = ""; // Wifi SSID
+char pass[15] = "";       // Wifi Password
+char apikey[] = "WZDTWH6PEE2G0YII";
 int status = WL_IDLE_STATUS;    // the Wifi radio's status
 char server[] = "api.thingspeak.com";
 int tempPin = 0;                // Sensor pin for Thermister
@@ -48,6 +51,9 @@ void setup()
   WiFi.init(&Serial1);
   delay(1000);
 
+  LoadFromEprom();
+
+
   // check for the presence of the shield
   if (WiFi.status() == WL_NO_SHIELD) {
     Serial.println("WiFi shield not present");
@@ -56,16 +62,18 @@ void setup()
   }
 
   // attempt to connect to WiFi network
+  int tryCount = 0;
   while ( status != WL_CONNECTED) {
+    if ((tryCount > 3) || (strlen(ssid) == 0)) {
+      tryCount = 0;
+      SelectNewSSID();
+    }
+    tryCount++;
     Serial.print("Attempting to connect to WPA SSID: ");
     Serial.println(ssid);
-    // Connect to WPA/WPA2 network
     status = WiFi.begin(ssid, pass);
   }
-
-
   digitalWrite(LED_BUILTIN, LOW);
-
   printWifiStatus();
 
 }
@@ -73,7 +81,6 @@ void setup()
 void loop()
 {
   digitalWrite(LED_BUILTIN, HIGH);
-
 
   int lightLevel  = analogRead(lightPin);
 
@@ -86,6 +93,7 @@ void loop()
   }
 
   float therm = getThermister();
+  
   sendDataToThingSpeak(therm, temperature, humidity, lightLevel);
 
   digitalWrite(LED_BUILTIN, LOW);
@@ -108,36 +116,25 @@ void sendDataToThingSpeak(float field1, int field2, int field3, int field4) {
   int cCount = 0;
 
   char field1str[10];
-
-  /* 4 is mininum width, 2 is precision; float value is copied onto str_temp*/
   dtostrf(field1, 4, 2, field1str);
 
-  char myCommand[90];
-  sprintf(myCommand, "GET /update?api_key=WZDTWH6PEE2G0YII&field1=%s&field2=%i&field3=%i&field4=%i", field1str, field2, field3, field4);
+  char myCommand[120];
+  sprintf(myCommand, "GET http://api.thingspeak.com/update?api_key=%s&field1=%s&field2=%i&field3=%i&field4=%i", apikey, field1str, field2, field3, field4);
   Serial.println(myCommand);
 
+  // Could try "AT+CIPSEND=4," + String(myCommand.length() + 2));
 
   client.stop();
-  if (client.connectSSL(server, 443)) {
-    //Serial.println("Connecting...");
-
-    // send the HTTP PUT request
-    cCount = client.println(myCommand);
-    //  Serial.println(cCount);
-    cCount = client.println(F("Host: api.thingspeak.com"));
-    //  Serial.println(cCount);
-    // cCount = client.println(F("Connection: close"));
-    // Serial.println(cCount);
+  if (client.connect(server, 80)) {      // connectSSL and port 443 also work
+    cCount = client.println(myCommand);  // TIMEOUT comes here, so no response is received  :-(
     client.println();
   }
   else {
-    // if you couldn't make a connection
     Serial.println("Connection failed");
   }
-  Serial.print("Characters written = ");
-  Serial.println(cCount);
+//  Serial.print("Characters written = ");
+//  Serial.println(cCount);
 
-  
   delay(1000);
   if (client.available()) {
     char* resp = "";
@@ -168,6 +165,7 @@ void printWifiStatus()
   Serial.print("Signal strength (RSSI):");
   Serial.print(rssi);
   Serial.println(" dBm");
+  Serial.flush();
 }
 
 
@@ -182,3 +180,96 @@ float getThermister() {
   return tempC;
 }
 
+void LoadFromEprom() {
+  int ptr = 0;
+  int value = EEPROM.read(ptr);
+  ptr += sizeof(value);
+  if (value == 255) {
+    SelectNewSSID();
+  }
+  EEPROM.get(ptr, ssid);
+  ptr += sizeof(ssid);
+  EEPROM.get(ptr, pass);
+  ptr += sizeof(pass);
+  EEPROM.get(ptr, apikey);
+}
+
+void SelectNewSSID() {
+  listNetworks();
+  FlushSerialInput();
+  Serial.setTimeout(10000);
+  Serial.print("Please enter SSID:");
+  Serial.readBytesUntil('\r', ssid, 15);
+  int thisNet = atoi(ssid);
+  strcpy(ssid, WiFi.SSID(thisNet));
+  Serial.println();
+  
+  FlushSerialInput();
+  Serial.print("Please enter Password:");
+  Serial.readBytesUntil('\r', pass, 15);
+  Serial.println();
+
+  Serial.flush();
+
+  int ptr = 0;
+  int value = 1;
+  EEPROM.put(ptr, value);
+  ptr += sizeof(value);
+  EEPROM.put(ptr, ssid);
+  ptr += sizeof(ssid);
+  EEPROM.put(ptr, pass);
+  ptr += sizeof(pass);
+  EEPROM.put(ptr, apikey);
+}
+
+
+void getFromSerial(char* rslt) {
+  char buffer[20] = "";
+  char c;
+  int i = 0;
+  do {
+    if (Serial.available()) {
+      c = Serial.read();
+      if (((byte)c != 13) && ((byte)c != 10)) {
+        buffer[i] = c;
+        buffer[i + 1] = 0;
+        i++;
+      }
+    }
+  } while (c != '\r');
+  for (int n = 0; n <= i; n++) {
+    rslt[n] = buffer[n];
+  }
+  rslt[i + 1] = 0;
+  FlushSerialInput();
+}
+
+void FlushSerialInput() {
+  delay(100);
+  while (Serial.available()) {
+    Serial.read();
+  }
+}
+
+void listNetworks()
+{
+  // scan for nearby networks
+  int numSsid = WiFi.scanNetworks();
+  if (numSsid == -1) {
+    Serial.println("Couldn't get a wifi connection");
+    while (true);
+  }
+  // print the list of networks seen
+  Serial.print("Number of available networks:");
+  Serial.println(numSsid);
+
+  // print the network number and name for each network found
+  for (int thisNet = 0; thisNet < numSsid; thisNet++) {
+    Serial.print(thisNet);
+    Serial.print(") ");
+    Serial.print(WiFi.SSID(thisNet));
+    Serial.print("\tSignal: ");
+    Serial.print(WiFi.RSSI(thisNet));
+    Serial.println(" dBm");
+  }
+}
