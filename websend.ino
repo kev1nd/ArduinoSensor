@@ -10,7 +10,7 @@
 //  02/03/18  1.0.2   Changed SSID to VioletInternet for new hub
 //  02/03/18  1.0.3   Add support for DHT11. Add support for Photo-resistor
 
-
+#include <WiFiEsp.h>
 #include <SimpleDHT.h>
 // for DHT11,
 //      VCC: 5V or 3V
@@ -27,10 +27,14 @@ SoftwareSerial Serial1(6, 7); // RX, TX
 #endif
 
 unsigned long waitTime = 30000; // Time to wait for a response
-String ssid = "VioletInternet"; // Wifi SSID
-String wifipw = "kjjj1997";     // Wifi Password
+char ssid[] = "VioletInternet"; // Wifi SSID
+char pass[] = "kjjj1997";     // Wifi Password
+int status = WL_IDLE_STATUS;     // the Wifi radio's status
+char server[] = "api.thingspeak.com";
 int tempPin = 0;                // Sensor pin for Thermister
-int lightPin =1;                // Sensor pin for light level
+int lightPin = 1;               // Sensor pin for light level
+
+WiFiEspClient client;
 
 void setup()
 {
@@ -38,7 +42,26 @@ void setup()
   digitalWrite(LED_BUILTIN, HIGH);
   Serial.begin(115200);         // The port back to the PC, if connected
   Serial1.begin(9600);          // ESP8266 serial port
-  connectwifi();
+
+  WiFi.init(&Serial1);
+  delay(1000);
+
+  // check for the presence of the shield
+  if (WiFi.status() == WL_NO_SHIELD) {
+    Serial.println("WiFi shield not present");
+    // don't continue
+    while (true);
+  }
+
+  // attempt to connect to WiFi network
+  while ( status != WL_CONNECTED) {
+    Serial.print("Attempting to connect to WPA SSID: ");
+    Serial.println(ssid);
+    // Connect to WPA/WPA2 network
+    status = WiFi.begin(ssid, pass);
+  }
+
+
   digitalWrite(LED_BUILTIN, LOW);
 }
 
@@ -57,167 +80,35 @@ void loop()
   }
 
   String thermister = (String)getThermister();
-  
+
   sendData(thermister, (String)temperature, (String)humidity, (String)lightLevel);
-  
+
   digitalWrite(LED_BUILTIN, LOW);
-
-
-
-//  if (Serial.available())
-//  {
-//    // wait to let all the input command in the serial buffer
-//    delay(10);
-//
-//    // read the input command in a string
-//    String cmd = "";
-//    while (Serial.available())
-//    {
-//      cmd += (char)Serial.read();
-//    }
-//
-//    // print the command and send it to the ESP
-//    Serial.println();
-//    Serial.print(">>>> ");
-//    Serial.println(cmd);
-//
-//    Serial1.print(cmd);
-//  }
 
   delay(30000);
 
 }
 
 
-bool connectwifi() {
-  bool success = true;
-  int stage = 3;
-  while (success && (stage > 0)) {
-    switch (stage) {
-      case 3:
-        success = SendCommand("AT+CWMODE=1");
-        break;
-      case 2:
-        success = SendCommand("AT+CWQAP");
-        break;
-      case 1:
-        success = SendCommand("AT+CWJAP=\"" + ssid + "\",\"" + wifipw + "\"");
-        break;
-      default:
-        stage = 0;
-        break;
-    }
-    stage--;
+
+void sendData(String field1, String field2, String field3, String field4) {
+
+  client.stop();
+  if (client.connect(server, 80)) {
+    Serial.println("Connecting...");
+
+    // send the HTTP PUT request
+    client.println("GET https://api.thingspeak.com/update?api_key=WZDTWH6PEE2G0YII&field1=" + field1 + "&field2=" + field2 + "&field3=" + field3 + "&field4=" + field4);
+    //client.println("Host: api.thingspeak.com");
+    client.println("Connection: close");
+    client.println();
   }
-  return success;
-}
-
-
-bool connectTCP() {
-  bool success = true;
-  int stage = 2;
-  while (success && (stage > 0)) {
-    switch (stage) {
-      case 2:
-        success = SendCommand("AT+CIPMUX=1");
-        break;
-      case 1:
-        success = SendCommand("AT+CIPSTART=4,\"TCP\",\"52.5.13.84\",80", "ALREADY CONNECT");
-        break;
-      default:
-        stage = 0;
-        break;
-    }
-    stage--;
+  else {
+    // if you couldn't make a connection
+    Serial.println("Connection failed");
   }
-  return success;
 }
 
-
-
-
-
-bool sendData(String field1, String field2, String field3, String field4) {
-  String dataStr = "GET https://api.thingspeak.com/update?api_key=WZDTWH6PEE2G0YII&field1=" + field1 + "&field2=" + field2 + "&field3=" + field3 + "&field4=" + field4;
-  bool success = true;
-  connectTCP();
-  int stage = 2;
-  while (success && (stage > 0)) {
-    switch (stage) {
-      case 2:
-        success = SendCommand("AT+CIPSEND=4," + String(dataStr.length() + 2));
-        break;
-      case 1:
-        success = SendCommand(dataStr);
-        break;
-      default:
-        stage = 0;
-        break;
-    }
-    stage--;
-  }
-  return success;
-}
-
-
-bool SendCommand(String cmd) {
-  SendCommand(cmd, waitTime);
-}
-
-bool SendCommand(String cmd, int waitFor) {
-  String rsp = "";
-  SendCommand(cmd, waitFor, "OK\r\n", rsp);
-}
-
-bool SendCommand(String cmd, String expectedResp) {
-  String rsp = "";
-  SendCommand(cmd, waitTime, expectedResp, rsp);
-}
-
-bool SendCommand(String cmd, int waitFor, String expectedResp, String &actualResp) {
-  bool rslt = false;
-  bool done = false;
-  Serial.println(">>>" + cmd);
-  Serial.flush();
-  Serial1.println(cmd);
-  Serial1.flush();
-
-  unsigned long stopMillis = millis() + waitFor;
-  String rsp = "";
-
-  while ((!done) && (millis() < stopMillis)) {
-    delay(100);
-    if (Serial1.available())
-    {
-      delay(100);
-      while (Serial1.available())
-      {
-        rsp += (char)Serial1.read();
-      }
-      Serial.print("<<<" + cmd);
-      Serial.println(rsp);
-      Serial.flush();
-      if ((rsp.indexOf("OK") >= 0) || (rsp.indexOf(expectedResp) >= 0)) { // Maybe try "OK\r\n" as well
-        rslt = true;
-        done = true;
-      }
-      if (rsp.indexOf("ERROR") >= 0) { // Maybe try "ERROR\r\n" as well
-        rslt = false;
-        done = true;
-      }
-    }
-  }
-  actualResp = rsp;
-  if (rslt) {
-    Serial.println("(SUCCESS)");
-  } else if (done) {
-    Serial.println("(FAIL)");
-  } else {
-    Serial.println("(TIMEOUT)");
-  }
-  Serial.flush();
-  return rslt;
-}
 
 
 float getThermister() {
