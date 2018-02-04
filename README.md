@@ -7,9 +7,14 @@ The idea behind the project is learning and training, but it may become the basi
 
 How it works
 
-Electronic 
+##Electronic 
 
-Pictures
+The electronics consists of:
+1. An Arduino Uno, mounted next to a breadboard
+2. An ESP8266 ESP-01, with standard AT Eprom
+3. A Thermister
+4. A DHT11 temperature and humidity sensor
+5. A light-sensitive resistor
 
 ![Picture of prototype board](https://github.com/kev1nd/ArduinoSensor/blob/master/assets/pic1.jpg)
 
