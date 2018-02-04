@@ -2,8 +2,6 @@
 An experimental project with an Arduino Uno linked to an ESP8266 ESP-01 Wifi module. 
 It reads temperature, light levels and humidity, and sends the data to ThingSpeak.
 
-<iframe width="450" height="260" style="border: 1px solid #cccccc;" src="https://thingspeak.com/channels/418675/charts/1?bgcolor=%23ffffff&color=%23d62020&dynamic=true&results=60&type=line&update=15"></iframe>
-
 The idea behind the project is learning and training, but it may become the basis of future IoT projects.
 
 ## How it works
