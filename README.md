@@ -13,7 +13,6 @@ Other features in the code include:
 3. If Wifi connection fails, it asks for the SSID and password through the serial monitor
 4. Convertion of thermister voltage to Kelvin and Celcius readings
 
-
 ## Electronics
 The electronics consists of:
 1. An Arduino Uno, mounted next to a breadboard
@@ -28,6 +27,35 @@ The electronics consists of:
 ![Another picture of prototype board](https://github.com/kev1nd/ArduinoSensor/blob/master/assets/pic2.jpg)
 
 ## Building your version
+This is the wiring diagram for the project.
+It's not complete yet (needs light-sensitice resistor circuit).
+
 ![Circuit Diagram](https://github.com/kev1nd/ArduinoSensor/blob/master/assets/circuit.JPG)
 
-Download and compile the code using the Arduino IDE
+### Configure your ESP8266 for 9600 baud
+The ESP8622 unit I bought was set to run at 115200 baud, which is too fast for software serial emulation on the Arduino to keep up with. However, sending this AT command to the unit will permanently configure it to 9600 baud:
+
+`AT+UART_DEF=9600,8,1,0,0`
+
+There are several articles around with sketches to send comms to the ESP8266 through Serial1. Since the Arduino will send, but not receive, quite happily at 115200, these can be used with this circuit. Alternatively, you can use an ESP8266 USB adapter talk to it directly from a PC.
+
+### Change the ThingSpeak Key
+Create yourself an account at https://thingspeak.com and create a channel. You will need four fields:-
+1. Temperature (Thermister)
+2. Temperature (DHT11)
+3. Humidity (DHT11)
+4. Light Level
+
+Change the thingspeak key (top of code) to your channel key.
+
+### Running for the first time
+Once you compile and run the code for the first time, it will try (and fail) to connect to Wifi. It will then list the found Wifi servers and ask you to select one using the serial port. The default baud rate for this is 115200. Enter the *number* next to the list to select one, then answer the password question.
+
+The software should then sample the sensors once every 30 seconds, and update thingspeak.
+
+## Future
+1. I plan to make the thingspeak key a configurable item, like the ssid and password
+2. There is a fault with the current version of the WifiEsp library, causing timeout reports. I plan to download and rebuild this library.
+3. A means of changing the wifi connection is needed - currently, this can only happen if the wifi connection can't happen
+4. A web service to configure, rather than a serial port form
+
