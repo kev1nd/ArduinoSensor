@@ -4,14 +4,17 @@ It reads temperature, light levels and humidity, and sends the data to ThingSpea
 
 The idea behind the project is learning and training, but it may become the basis of future IoT projects.
 
+There are some good featues, that should be re-usable, for example.
+1. Connect an Arduino to WiFi, and reliably send data using the WifiEsp library. (library also supports web service and more)
+2. Interface to the ESP8266 ESP-01 module. This means a 3.3V voltage regulator for power (the Arduino 3.3V power can't provide enough current) and a TTL 5V to 3.3V step-down using two resistors.
+3. Connect to the data agrogation service, thingspeak
+4. Read and Write configuration data to Eeprom. The configuration remains even when the sketch is uploaded
+5. Serial port used as data input form
+
 ## How it works
 The Ardunino reads the sensors every 30 seconds and sends the data to https://thingspeak.com
-https://thingspeak.com records the data, and displays it using some cool graphs
-Other features in the code include:
-1. Use of the WifiEsp library to connect to Wifi using an ESP8266
-2. Stores the SSID and password in Eeprom
-3. If Wifi connection fails, it asks for the SSID and password through the serial monitor
-4. Convertion of thermister voltage to Kelvin and Celcius readings
+https://thingspeak.com records the data, and displays it using some cool graphs.
+A Wifi module is used to communicate with the network. This connects to Wifi, opens a TCP connection and sends an HTTP Get request containing the data fields. (Using GET to affectivey PUT data isn't great, but that seems to be how Thingspeak works)
 
 ## Electronics
 The electronics consists of:
