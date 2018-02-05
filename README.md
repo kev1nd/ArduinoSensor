@@ -11,12 +11,14 @@ There are some good featues, that should be re-usable, for example.
 4. Read and Write configuration data to Eeprom. The configuration remains even when the sketch is uploaded
 5. Serial port used as data input form
 
+https://thingspeak.com/channels/418675
+
 ## How it works
 The Ardunino reads the sensors every 30 seconds and sends the data to https://thingspeak.com
 https://thingspeak.com records the data, and displays it using some cool graphs.
 A Wifi module is used to communicate with the network. This connects to Wifi, opens a TCP connection and sends an HTTP Get request containing the data fields. (Using GET to affectivey PUT data isn't great, but that seems to be how Thingspeak works)
 
-## Electronics
+### Electronics
 The electronics consists of:
 1. An Arduino Uno, mounted next to a breadboard
 2. An ESP8266 ESP-01, with standard AT Eprom
