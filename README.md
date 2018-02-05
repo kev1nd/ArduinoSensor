@@ -28,6 +28,6 @@ The electronics consists of:
 ![Picture of prototype board](https://github.com/kev1nd/ArduinoSensor/blob/master/assets/pic2.jpg)
 
 ## Building your version
-I will produce a circuit diagram in due course.
+![Picture of prototype board](https://github.com/kev1nd/ArduinoSensor/blob/master/assets/circuit.jpg)
 
 Download and compile the code using the Arduino IDE
