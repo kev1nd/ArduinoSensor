@@ -25,9 +25,9 @@ The electronics consists of:
 
 ![Picture of prototype board](https://github.com/kev1nd/ArduinoSensor/blob/master/assets/pic1.jpg)
 
-![Picture of prototype board](https://github.com/kev1nd/ArduinoSensor/blob/master/assets/pic2.jpg)
+![Another picture of prototype board](https://github.com/kev1nd/ArduinoSensor/blob/master/assets/pic2.jpg)
 
 ## Building your version
-![Picture of prototype board](https://github.com/kev1nd/ArduinoSensor/blob/master/assets/circuit.jpg)
+![Circuit Diagram](https://github.com/kev1nd/ArduinoSensor/blob/master/assets/circuit.JPG)
 
 Download and compile the code using the Arduino IDE
