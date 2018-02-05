@@ -35,7 +35,7 @@ The electronics consists of:
 This is the wiring diagram for the project.
 It's not complete yet (needs light-sensitice resistor circuit).
 
-![Circuit Diagram](https://github.com/kev1nd/ArduinoSensor/blob/master/assets/circuit.JPG)
+![Circuit Diagram](https://github.com/kev1nd/ArduinoSensor/blob/master/assets/Circuit.jpg)
 
 ### Configure your ESP8266 for 9600 baud
 The ESP8622 unit I bought was set to run at 115200 baud, which is too fast for software serial emulation on the Arduino to keep up with. However, sending this AT command to the unit will permanently configure it to 9600 baud:
