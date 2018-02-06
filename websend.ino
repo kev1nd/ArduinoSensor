@@ -222,28 +222,6 @@ void SelectNewSSID() {
   EEPROM.put(ptr, apikey);
 }
 
-
-void getFromSerial(char* rslt) {
-  char buffer[20] = "";
-  char c;
-  int i = 0;
-  do {
-    if (Serial.available()) {
-      c = Serial.read();
-      if (((byte)c != 13) && ((byte)c != 10)) {
-        buffer[i] = c;
-        buffer[i + 1] = 0;
-        i++;
-      }
-    }
-  } while (c != '\r');
-  for (int n = 0; n <= i; n++) {
-    rslt[n] = buffer[n];
-  }
-  rslt[i + 1] = 0;
-  FlushSerialInput();
-}
-
 void FlushSerialInput() {
   delay(100);
   while (Serial.available()) {
@@ -273,3 +251,6 @@ void listNetworks()
     Serial.println(" dBm");
   }
 }
+
+
+
