@@ -6,10 +6,9 @@
 #include "Arduino.h"
 
 
-ThingSpeak::ThingSpeak(char * key, Stream *serialPort)
+ThingSpeak::ThingSpeak(char * key)
 {
   strcpy(apikey, key);
-  Port = serialPort;
   status = WL_IDLE_STATUS;
   for (int i = 0; i < 8; i++) {
     data[i] = 0;
@@ -18,7 +17,11 @@ ThingSpeak::ThingSpeak(char * key, Stream *serialPort)
 }
 
 void ThingSpeak::ConnectWifi(char *ssid, char *password) {
-  WiFi.init(Port);
+#ifndef HAVE_HWSERIAL1
+  SoftwareSerial Serial1(6, 7); // RX, TX
+#endif
+  Serial1.begin(9600);
+  WiFi.init(&Serial1);
   if (WiFi.status() == WL_NO_SHIELD) {
     Serial.println("WiFi shield not present");
     // don't continue
@@ -41,6 +44,9 @@ void ThingSpeak::Data(int ref, float fielddata) {
   hasdata[ref] = true;
 }
 
+int ThingSpeak::Status() {
+  return status;
+}
 
 void ThingSpeak::Send() {
   int cCount = 0;

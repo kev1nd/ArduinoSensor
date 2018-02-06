@@ -12,7 +12,7 @@
 //  02/03/18  1.0.4   Add WiFiEsp library and EEPROM storage for ssid/password
 
 #include "thingspeak.h"
-#include <WiFiEsp.h>
+//#include <WiFiEsp.h>
 #include <SimpleDHT.h>
 #include <EEPROM.h>
 
@@ -35,55 +35,32 @@ unsigned long waitTime = 30000; // Time to wait for a response
 char ssid[15] = ""; // Wifi SSID
 char pass[15] = "";       // Wifi Password
 char apikey[] = "WZDTWH6PEE2G0YII";
-int status = WL_IDLE_STATUS;    // the Wifi radio's status
-char server[] = "api.thingspeak.com";
+//int status = WL_IDLE_STATUS;    // the Wifi radio's status
+//char server[] = "api.thingspeak.com";
 int tempPin = 0;                // Sensor pin for Thermister
 int lightPin = 1;               // Sensor pin for light level
 
-WiFiEspClient client;
+//WiFiEspClient client;
+ThingSpeak thingspeak(apikey);
 
 void setup()
 {
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
   Serial.begin(115200);         // The port back to the PC, if connected
-  Serial1.begin(9600);          // ESP8266 serial port
-
-  WiFi.init(&Serial1);
   delay(1000);
-
   LoadFromEprom();
-
-
-  // check for the presence of the shield
-  if (WiFi.status() == WL_NO_SHIELD) {
-    Serial.println("WiFi shield not present");
-    // don't continue
-    while (true);
-  }
-
-  // attempt to connect to WiFi network
-  int tryCount = 0;
-  while ( status != WL_CONNECTED) {
-    if ((tryCount > 3) || (strlen(ssid) == 0)) {
-      tryCount = 0;
-      SelectNewSSID();
-    }
-    tryCount++;
-    Serial.print("Attempting to connect to WPA SSID: ");
-    Serial.println(ssid);
-    status = WiFi.begin(ssid, pass);
-  }
+  thingspeak.ConnectWifi(ssid, pass);  
   digitalWrite(LED_BUILTIN, LOW);
-  printWifiStatus();
-
+  //printWifiStatus();
 }
 
 void loop()
 {
   digitalWrite(LED_BUILTIN, HIGH);
 
-  int lightLevel  = analogRead(lightPin);
+  float therm = getThermister();
+  thingspeak.Data(0, therm);  
 
   byte temperature = 0;
   byte humidity = 0;
@@ -92,82 +69,36 @@ void loop()
     Serial.println("Read DHT11 failed");
     return;
   }
-
-  float therm = getThermister();
+  thingspeak.Data(1, temperature);
+  thingspeak.Data(2, humidity);
   
-  sendDataToThingSpeak(therm, temperature, humidity, lightLevel);
+  int lightLevel  = analogRead(lightPin);
+  thingspeak.Data(3, lightLevel);
+  thingspeak.Send();
 
   digitalWrite(LED_BUILTIN, LOW);
-
-  delay(30000);
-
-  if (client.available()) {
-    String resp = "";
-    while (client.available())
-    {
-      resp += (char)client.read();
-    }
-    Serial.println("Remote response: " + resp);
-  }
+  delay(30000); 
 }
 
 
-
-void sendDataToThingSpeak(float field1, int field2, int field3, int field4) {
-  int cCount = 0;
-
-  char field1str[10];
-  dtostrf(field1, 4, 2, field1str);
-
-  char myCommand[120];
-  sprintf(myCommand, "GET http://api.thingspeak.com/update?api_key=%s&field1=%s&field2=%i&field3=%i&field4=%i", apikey, field1str, field2, field3, field4);
-  Serial.println(myCommand);
-
-  // Could try "AT+CIPSEND=4," + String(myCommand.length() + 2));
-
-  client.stop();
-  if (client.connect(server, 80)) {      // connectSSL and port 443 also work
-    cCount = client.println(myCommand);  // TIMEOUT comes here, so no response is received  :-(
-    client.println();
-  }
-  else {
-    Serial.println("Connection failed");
-  }
-//  Serial.print("Characters written = ");
-//  Serial.println(cCount);
-
-  delay(1000);
-  if (client.available()) {
-    char* resp = "";
-    while (client.available())
-    {
-      resp += (char)client.read();
-    }
-    Serial.print("Remote response:");
-    Serial.println(resp);
-  }
-
-}
-
-
-void printWifiStatus()
-{
-  // print the SSID of the network you're attached to
-  Serial.print("SSID: ");
-  Serial.println(WiFi.SSID());
-
-  // print your WiFi shield's IP address
-  IPAddress ip = WiFi.localIP();
-  Serial.print("IP Address: ");
-  Serial.println(ip);
-
-  // print the received signal strength
-  long rssi = WiFi.RSSI();
-  Serial.print("Signal strength (RSSI):");
-  Serial.print(rssi);
-  Serial.println(" dBm");
-  Serial.flush();
-}
+//void printWifiStatus()
+//{
+//  // print the SSID of the network you're attached to
+//  Serial.print("SSID: ");
+//  Serial.println(WiFi.SSID());
+//
+//  // print your WiFi shield's IP address
+//  IPAddress ip = WiFi.localIP();
+//  Serial.print("IP Address: ");
+//  Serial.println(ip);
+//
+//  // print the received signal strength
+//  long rssi = WiFi.RSSI();
+//  Serial.print("Signal strength (RSSI):");
+//  Serial.print(rssi);
+//  Serial.println(" dBm");
+//  Serial.flush();
+//}
 
 
 float getThermister() {
@@ -274,3 +205,6 @@ void listNetworks()
     Serial.println(" dBm");
   }
 }
+
+
+
