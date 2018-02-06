@@ -11,6 +11,7 @@
 //  02/03/18  1.0.3   Add support for DHT11. Add support for Photo-resistor
 //  02/03/18  1.0.4   Add WiFiEsp library and EEPROM storage for ssid/password
 
+#include "thingspeak.h"
 #include <WiFiEsp.h>
 #include <SimpleDHT.h>
 #include <EEPROM.h>
