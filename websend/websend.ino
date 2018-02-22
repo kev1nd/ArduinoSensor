@@ -61,6 +61,7 @@ void setup()
     while (true);
   }
 
+  //SelectNewSSID();
   // attempt to connect to WiFi network
   int tryCount = 0;
   while ( status != WL_CONNECTED) {
