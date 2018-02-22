@@ -1,6 +1,5 @@
 #ifndef thingspeak_h
 #define thingspeak_h
-
 #include <inttypes.h>
 #include "Print.h"
 #include <WiFiEsp.h>

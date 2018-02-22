@@ -5,7 +5,6 @@
 #include <inttypes.h>
 #include "Arduino.h"
 
-
 ThingSpeak::ThingSpeak(char * key)
 {
   strcpy(apikey, key);

@@ -11,6 +11,7 @@
 //  02/03/18  1.0.3   Add support for DHT11. Add support for Photo-resistor
 //  02/03/18  1.0.4   Add WiFiEsp library and EEPROM storage for ssid/password
 
+
 #include "thingspeak.h"
 //#include <WiFiEsp.h>
 #include <SimpleDHT.h>
@@ -50,7 +51,7 @@ void setup()
   Serial.begin(115200);         // The port back to the PC, if connected
   delay(1000);
   LoadFromEprom();
-  thingspeak.ConnectWifi(ssid, pass);  
+  thingspeak.ConnectWifi(ssid, pass);
   digitalWrite(LED_BUILTIN, LOW);
   //printWifiStatus();
 }
@@ -60,7 +61,7 @@ void loop()
   digitalWrite(LED_BUILTIN, HIGH);
 
   float therm = getThermister();
-  thingspeak.Data(0, therm);  
+  thingspeak.Data(0, therm);
 
   byte temperature = 0;
   byte humidity = 0;
@@ -71,35 +72,14 @@ void loop()
   }
   thingspeak.Data(1, temperature);
   thingspeak.Data(2, humidity);
-  
+
   int lightLevel  = analogRead(lightPin);
   thingspeak.Data(3, lightLevel);
   thingspeak.Send();
 
   digitalWrite(LED_BUILTIN, LOW);
-  delay(30000); 
+  delay(30000);
 }
-
-
-//void printWifiStatus()
-//{
-//  // print the SSID of the network you're attached to
-//  Serial.print("SSID: ");
-//  Serial.println(WiFi.SSID());
-//
-//  // print your WiFi shield's IP address
-//  IPAddress ip = WiFi.localIP();
-//  Serial.print("IP Address: ");
-//  Serial.println(ip);
-//
-//  // print the received signal strength
-//  long rssi = WiFi.RSSI();
-//  Serial.print("Signal strength (RSSI):");
-//  Serial.print(rssi);
-//  Serial.println(" dBm");
-//  Serial.flush();
-//}
-
 
 float getThermister() {
   int tempReading = analogRead(tempPin);
@@ -135,7 +115,7 @@ void SelectNewSSID() {
   int thisNet = atoi(ssid);
   strcpy(ssid, WiFi.SSID(thisNet));
   Serial.println();
-  
+
   FlushSerialInput();
   Serial.print("Please enter Password:");
   Serial.readBytesUntil('\r', pass, 15);
