@@ -68,4 +68,3 @@ The software should then sample the sensors once every 30 seconds, and update th
 ## Future
 1. A web service to configure, rather than a serial port form
 
-<iframe width="450" height="260" style="border: 1px solid #cccccc;" src="https://thingspeak.com/channels/418675/charts/4?bgcolor=%23ffffff&color=%23d62020&dynamic=true&results=60&type=line&update=15"></iframe>
