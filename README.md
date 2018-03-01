@@ -51,16 +51,20 @@ Create yourself an account at https://thingspeak.com and create a channel. You w
 3. Humidity (DHT11)
 4. Light Level
 
-Change the thingspeak key (top of code) to your channel key.
 
 ### Running for the first time
-Once you compile and run the code for the first time, it will try (and fail) to connect to Wifi. It will then list the found Wifi servers and ask you to select one using the serial port. The default baud rate for this is 115200. Enter the *number* next to the list to select one, then answer the password question.
+For the first time, run the Arduino connected to a serial port, and start the Serial Monitor (115200 Baud). Using the serial port as an entry-form, you will be asked if you want to configure - answer with "Y" to start the configuration process. If you do, you will be asked three questions:-
+
+1. Wifi SSID
+2. Wifi Password
+3. Your Thingspeak API key (for writing to your channel)
+
+If you either enter some data or wait for the timeout (10 seconds per question), the software will repeat the value entered and save the value into EEPROM. Of course, if you're too late and missed the question, just press the reset button on the Arduino.
+
+If left alone after a reset, the values stored in EEPROM will be used.
 
 The software should then sample the sensors once every 30 seconds, and update thingspeak.
 
 ## Future
-1. I plan to make the thingspeak key a configurable item, like the ssid and password
-2. There is a fault with the current version of the WifiEsp library, causing timeout reports. I plan to download and rebuild this library.
-3. A means of changing the wifi connection is needed - currently, this can only happen if the wifi connection can't happen
-4. A web service to configure, rather than a serial port form
+1. A web service to configure, rather than a serial port form
 
