@@ -32,6 +32,7 @@ char pass[15] = "";   // Wifi Password
 char apikey[16] = "";
 int tempPin = 0;      // Sensor pin for Thermister
 int lightPin = 1;     // Sensor pin for light level
+int inputLevel = 2;
 char fielddata[12] = "";
 
 void setup()
@@ -73,6 +74,7 @@ void loop()
   }
 
   float therm = getThermister();
+  float volts = analogRead(inputLevel) / 18.65;
   
   dtostrf(therm, 4, 2, fielddata);
   thingspeak.Data(1, fielddata);
@@ -82,9 +84,13 @@ void loop()
   thingspeak.Data(3, fielddata);
   dtostrf(lightLevel, 4, 2, fielddata);
   thingspeak.Data(4, fielddata);
+  dtostrf(volts, 4, 2, fielddata);
+  thingspeak.Data(5, fielddata);
+  
   thingspeak.Send();
 
   digitalWrite(LED_BUILTIN, LOW);
+
 
   delay(30000);
 
